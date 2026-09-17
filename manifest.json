@@ -1,0 +1,38 @@
+{
+  "manifest_version": 3,
+  "name": "YouTube 字幕导出器",
+  "version": "0.6.1",
+  "description": "导出 YouTube 字幕，或下载音频并使用本地 Whisper large-v3 转为 TXT。",
+  "minimum_chrome_version": "116",
+  "permissions": ["offscreen", "tabCapture"],
+  "host_permissions": [
+    "https://huggingface.co/*",
+    "https://*.huggingface.co/*",
+    "https://*.hf.co/*",
+    "https://*.xethub.hf.co/*",
+    "http://127.0.0.1:43127/*"
+  ],
+  "background": {
+    "service_worker": "service-worker.js"
+  },
+  "action": {
+    "default_title": "高准确率本地转写"
+  },
+  "content_security_policy": {
+    "extension_pages": "script-src 'self' 'wasm-unsafe-eval'; object-src 'self'"
+  },
+  "content_scripts": [
+    {
+      "matches": ["https://www.youtube.com/*"],
+      "js": ["page-bridge.js"],
+      "run_at": "document_start",
+      "world": "MAIN"
+    },
+    {
+      "matches": ["https://www.youtube.com/*"],
+      "js": ["transcript.js", "content.js"],
+      "css": ["content.css"],
+      "run_at": "document_start"
+    }
+  ]
+}

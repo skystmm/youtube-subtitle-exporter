@@ -1,0 +1,226 @@
+#yt-subtitle-exporter {
+  position: fixed;
+  right: 20px;
+  bottom: 22px;
+  z-index: 2147483647;
+  color: #0f0f0f;
+  font: 14px/1.4 Arial, sans-serif;
+}
+
+#yt-subtitle-exporter button {
+  font: inherit;
+}
+
+#yt-subtitle-exporter .ytse-trigger {
+  border: 0;
+  border-radius: 999px;
+  padding: 11px 16px;
+  color: #fff;
+  background: #f03;
+  box-shadow: 0 4px 18px rgb(0 0 0 / 25%);
+  cursor: pointer;
+  font-weight: 700;
+}
+
+#yt-subtitle-exporter .ytse-panel {
+  position: absolute;
+  right: 0;
+  bottom: 52px;
+  width: min(320px, calc(100vw - 40px));
+  max-height: min(420px, calc(100vh - 100px));
+  overflow: auto;
+  box-sizing: border-box;
+  padding: 14px;
+  border: 1px solid #ddd;
+  border-radius: 14px;
+  background: #fff;
+  box-shadow: 0 8px 30px rgb(0 0 0 / 25%);
+}
+
+#yt-subtitle-exporter .ytse-panel[hidden] {
+  display: none;
+}
+
+#yt-subtitle-exporter .ytse-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+
+#yt-subtitle-exporter .ytse-close {
+  border: 0;
+  padding: 0 4px;
+  background: transparent;
+  cursor: pointer;
+  font-size: 24px;
+}
+
+#yt-subtitle-exporter .ytse-tracks {
+  display: grid;
+  gap: 7px;
+}
+
+#yt-subtitle-exporter .ytse-section-title {
+  margin-top: 5px;
+  color: #606060;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+#yt-subtitle-exporter .ytse-direct-export {
+  border-color: #065fd4;
+  color: #fff;
+  background: #065fd4;
+  font-weight: 700;
+}
+
+#yt-subtitle-exporter .ytse-direct-export:hover {
+  background: #0356c2;
+}
+
+#yt-subtitle-exporter .ytse-track-details summary {
+  padding: 5px 2px;
+  color: #606060;
+  cursor: pointer;
+  font-size: 12px;
+}
+
+#yt-subtitle-exporter .ytse-track-list {
+  display: grid;
+  gap: 7px;
+  padding-top: 7px;
+}
+
+#yt-subtitle-exporter .ytse-whisper-actions {
+  display: flex;
+  gap: 7px;
+}
+
+#yt-subtitle-exporter .ytse-language-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  color: #606060;
+  font-size: 12px;
+}
+
+#yt-subtitle-exporter .ytse-language {
+  min-width: 150px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  padding: 7px 9px;
+  color: #0f0f0f;
+  background: #fff;
+}
+
+#yt-subtitle-exporter .ytse-whisper-actions .ytse-accurate-whisper {
+  flex: 1;
+}
+
+#yt-subtitle-exporter .ytse-accurate-whisper {
+  border-color: #f03;
+  color: #fff;
+  background: #f03;
+  font-weight: 700;
+}
+
+#yt-subtitle-exporter .ytse-accurate-whisper:hover {
+  background: #d9002e;
+}
+
+#yt-subtitle-exporter .ytse-whisper-cancel {
+  border: 1px solid #ddd;
+  border-radius: 9px;
+  padding: 9px 12px;
+  color: #c00;
+  background: transparent;
+  cursor: pointer;
+}
+
+#yt-subtitle-exporter .ytse-whisper-cancel[hidden] {
+  display: none;
+}
+
+#yt-subtitle-exporter .ytse-track {
+  width: 100%;
+  border: 1px solid #ddd;
+  border-radius: 9px;
+  padding: 9px 10px;
+  color: #0f0f0f;
+  background: #f7f7f7;
+  cursor: pointer;
+  text-align: left;
+}
+
+#yt-subtitle-exporter .ytse-track:hover {
+  background: #eee;
+}
+
+#yt-subtitle-exporter .ytse-track:disabled {
+  cursor: wait;
+  opacity: 0.6;
+}
+
+#yt-subtitle-exporter .ytse-status {
+  margin: 10px 0 0;
+  color: #606060;
+  font-size: 12px;
+}
+
+#yt-subtitle-exporter .ytse-status[data-error="true"] {
+  color: #c00;
+}
+
+@media (prefers-color-scheme: dark) {
+  #yt-subtitle-exporter .ytse-panel {
+    border-color: #444;
+    color: #f1f1f1;
+    background: #212121;
+  }
+
+  #yt-subtitle-exporter .ytse-track {
+    border-color: #555;
+    color: #f1f1f1;
+    background: #333;
+  }
+
+  #yt-subtitle-exporter .ytse-track:hover {
+    background: #444;
+  }
+
+  #yt-subtitle-exporter .ytse-direct-export,
+  #yt-subtitle-exporter .ytse-direct-export:hover {
+    border-color: #3ea6ff;
+    color: #0f0f0f;
+    background: #3ea6ff;
+  }
+
+  #yt-subtitle-exporter .ytse-accurate-whisper,
+  #yt-subtitle-exporter .ytse-accurate-whisper:hover {
+    border-color: #f03;
+    color: #fff;
+    background: #f03;
+  }
+
+  #yt-subtitle-exporter .ytse-whisper-cancel {
+    border-color: #555;
+    color: #ff6b6b;
+  }
+
+  #yt-subtitle-exporter .ytse-language-row {
+    color: #aaa;
+  }
+
+  #yt-subtitle-exporter .ytse-section-title,
+  #yt-subtitle-exporter .ytse-track-details summary {
+    color: #aaa;
+  }
+
+  #yt-subtitle-exporter .ytse-language {
+    border-color: #555;
+    color: #f1f1f1;
+    background: #333;
+  }
+}
