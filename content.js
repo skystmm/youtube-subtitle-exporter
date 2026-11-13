@@ -10,7 +10,7 @@
     "ytd-transcript-segment-renderer, transcript-segment-view-model";
 
   function isVideoPage() {
-    return location.pathname === "/watch" && new URLSearchParams(location.search).has("v");
+    return Boolean(VideoSite.getVideoPage(location.href));
   }
 
   function getTracks() {
@@ -130,11 +130,12 @@
   }
 
   function getWhisperMetadata() {
+    const page = VideoSite.getVideoPage(location.href);
     const selection = root?.querySelector(".ytse-language")?.value || "auto";
     return {
-      videoId: new URLSearchParams(location.search).get("v"),
+      videoId: page?.videoId,
       title: document.title.replace(/ - YouTube$/, ""),
-      url: `https://www.youtube.com/watch?v=${new URLSearchParams(location.search).get("v")}`,
+      url: page?.url,
       language: YouTubeTranscript.resolveWhisperLanguage(
         selection,
         detectedAudioLanguage,
@@ -419,6 +420,12 @@
     panel.hidden = false;
     const list = root.querySelector(".ytse-tracks");
     list.replaceChildren();
+    if (VideoSite.getVideoPage(location.href)?.site === "xiaohongshu") {
+      detectedAudioLanguage = "zh";
+      addWhisperOption(list);
+      setStatus("提取小红书视频音频并本地转写；失败时可选择播放录制模式。图文笔记无法转写。");
+      return;
+    }
     setStatus("正在查找字幕…");
 
     const trackData = await getTracks();
@@ -478,7 +485,7 @@
     root = document.createElement("div");
     root.id = "yt-subtitle-exporter";
     root.innerHTML = `
-      <button class="ytse-trigger" type="button" aria-label="导出 YouTube 字幕">导出字幕 TXT</button>
+      <button class="ytse-trigger" type="button" aria-label="导出视频口播稿">${VideoSite.getVideoPage(location.href)?.site === "xiaohongshu" ? "提取口播稿 TXT" : "导出字幕 TXT"}</button>
       <section class="ytse-panel" hidden>
         <div class="ytse-header">
           <strong>选择字幕</strong>
@@ -500,6 +507,14 @@
     mount();
   }
   document.addEventListener("yt-navigate-finish", mount);
+  if (location.hostname === "www.xiaohongshu.com") {
+    let lastPageUrl = location.href;
+    window.setInterval(() => {
+      if (location.href === lastPageUrl) return;
+      lastPageUrl = location.href;
+      mount();
+    }, 500);
+  }
 
   chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
     if (message?.type === "REQUEST_WHISPER_SETTINGS") {

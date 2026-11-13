@@ -1,0 +1,9 @@
+#!/bin/zsh
+set -e
+export PATH="/opt/homebrew/bin:/usr/local/bin:/Library/Frameworks/Python.framework/Versions/Current/bin:$PATH"
+export PYTHONDONTWRITEBYTECODE=1
+cd "$(dirname "$0")"
+if [[ -x ".venv/bin/python" ]]; then
+  exec .venv/bin/python -B -m local_helper.native_host
+fi
+exec python3 -B -m local_helper.native_host

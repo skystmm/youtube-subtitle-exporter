@@ -1,6 +1,34 @@
+importScripts("helper-launch.js", "video-site.js");
+
 const OFFSCREEN_PATH = "offscreen.html";
+const LOCAL_HELPER_URL = "http://127.0.0.1:43127/health";
+const NATIVE_HOST_NAME = "com.skystmm.video_subtitle_helper";
 let creatingOffscreen;
 let activeTabId;
+
+async function checkLocalHelperHealth() {
+  try {
+    const response = await fetch(LOCAL_HELPER_URL, {
+      cache: "no-store",
+      signal: AbortSignal.timeout(800)
+    });
+    return response.ok;
+  } catch (_) {
+    return false;
+  }
+}
+
+async function ensureLocalHelperRunning() {
+  return HelperLauncher.ensureLocalHelper({
+    checkHealth: checkLocalHelperHealth,
+    startNative: () => chrome.runtime.sendNativeMessage(
+      NATIVE_HOST_NAME,
+      { action: "start" }
+    ),
+    sleep: (milliseconds) => new Promise((resolve) => setTimeout(resolve, milliseconds)),
+    extensionId: chrome.runtime.id
+  });
+}
 
 async function ensureOffscreenDocument() {
   const url = chrome.runtime.getURL(OFFSCREEN_PATH);
@@ -34,8 +62,14 @@ async function readPageMetadata(tabId, metadata = {}) {
 }
 
 async function startFastTranscription(tabId, metadata = {}, defaultMode = "fast") {
-  if (!tabId) throw new Error("找不到当前 YouTube 标签页");
+  if (!tabId) throw new Error("找不到当前视频标签页");
   if (activeTabId) throw new Error("已有本地识别任务正在运行");
+  await sendToTab(tabId, {
+    type: "WHISPER_STATUS",
+    source: "background",
+    message: "正在检查并启动本地助手…"
+  });
+  await ensureLocalHelperRunning();
   metadata = await readPageMetadata(tabId, metadata);
   metadata.transcriptionMode ||= defaultMode;
   await ensureOffscreenDocument();
@@ -51,7 +85,7 @@ async function startFastTranscription(tabId, metadata = {}, defaultMode = "fast"
 }
 
 async function startCapture(tabId, metadata = {}) {
-  if (!tabId) throw new Error("找不到当前 YouTube 标签页");
+  if (!tabId) throw new Error("找不到当前视频标签页");
   if (activeTabId) throw new Error("已有本地识别任务正在运行");
 
   const streamId = await chrome.tabCapture.getMediaStreamId({ targetTabId: tabId });
@@ -80,6 +114,26 @@ async function sendToTab(tabId, message) {
 
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message?.target === "offscreen") return false;
+
+  if (message?.type === "BILIBILI_FETCH_JSON") {
+    let requestUrl;
+    try {
+      requestUrl = new URL(message.url);
+      const allowedHost = requestUrl.hostname === "api.bilibili.com" || requestUrl.hostname.endsWith(".hdslb.com");
+      if (requestUrl.protocol !== "https:" || !allowedHost) throw new Error("不允许请求这个地址");
+    } catch (error) {
+      sendResponse({ ok: false, error: error.message || "字幕地址无效" });
+      return false;
+    }
+    fetch(requestUrl, { credentials: "include", referrer: "https://www.bilibili.com/" })
+      .then((response) => {
+        if (!response.ok) throw new Error(`B 站接口请求失败 (${response.status})`);
+        return response.json();
+      })
+      .then((data) => sendResponse({ ok: true, data }))
+      .catch((error) => sendResponse({ ok: false, error: error.message }));
+    return true;
+  }
 
   if (message?.type === "START_LOCAL_WHISPER") {
     startCapture(sender.tab?.id, message.metadata)
@@ -128,7 +182,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 });
 
 chrome.action.onClicked.addListener((tab) => {
-  if (!tab.url?.startsWith("https://www.youtube.com/watch")) return;
+  if (!VideoSite.getVideoPage(tab.url)) return;
   startFastTranscription(tab.id, {}, "accurate")
     .then((result) => sendToTab(tab.id, {
       type: "WHISPER_FAST_STARTED",

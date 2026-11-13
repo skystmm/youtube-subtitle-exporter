@@ -1,6 +1,15 @@
-# YouTube 字幕导出器
+# 视频字幕文字稿
 
-一个零账号的 Chrome/Edge Manifest V3 插件。它会读取当前 YouTube 视频已有的字幕轨道，并将所选字幕保存为 UTF-8 TXT 文件。没有字幕时，本机助手会用 `yt-dlp` 快速下载音频，再交给本地 Whisper 识别口播，不需要把视频完整播放一遍。
+一个零账号的 Chrome/Edge Manifest V3 插件。它支持 YouTube 字幕导出，并在哔哩哔哩标准视频页提供类似 YouTube 的可拖动文字稿面板。
+
+在 B 站视频页点击右下角“文字稿”即可：
+
+- 按时间轴浏览字幕，点击任一条跳转播放位置。
+- 自动高亮并跟随当前播放字幕。
+- 拖动面板标题栏移动位置，拖动边角调整大小。
+- 选择字幕语言、复制全文或导出 UTF-8 TXT。
+
+B 站功能读取视频本身已有的字幕，不会生成原视频没有的字幕；当前支持 `bilibili.com/video/BV…` 标准视频页。
 
 对于 YouTube 返回空字幕正文的受限视频，插件会自动打开并读取 YouTube 原生文字稿面板，不需要外部服务。
 
@@ -12,22 +21,47 @@
 4. 点击“加载已解压的扩展程序”。
 5. 选择本项目目录 `youtube-subtitle-exporter`。
 
-修改或升级插件后，请在扩展管理页点击插件的“重新加载”，并刷新已打开的 YouTube 页面。
+修改或升级插件后，请在扩展管理页点击插件的“重新加载”，并刷新已打开的视频页面。
 
-### 启动本机助手
+### 安装本机助手（仅首次）
 
-转写前双击项目中的 `start-helper.command`，并保持打开的终端窗口运行。助手只监听本机 `127.0.0.1:43127`。
+1. 打开 `chrome://extensions`，开启开发者模式，复制本插件的 32 位 ID。
+2. 双击项目中的 `install-helper.command`，按提示粘贴插件 ID。
+3. 在扩展管理页重新加载插件，并刷新视频页面。
 
-在 Apple Silicon Mac 上首次使用“高准确率转写”前，先双击 `setup-accurate.command`。它会在项目内建立隔离的 Python 环境并安装 Apple MLX Whisper；首次转写还会从 Hugging Face 下载约 3 GB 的完整 `large-v3` 模型，之后会使用本机缓存。
+安装脚本会把独立运行环境安装到 `~/Library/Application Support/VideoSubtitleHelper`，注册 Chrome/Edge Native Messaging Host，并添加 macOS 登录后台服务。以后点击高准确率或快速 Whisper 转写时，插件会检查并自动唤醒本机助手，不再需要手动保持终端窗口开启。助手只监听本机 `127.0.0.1:43127`，日志位于 `~/Library/Logs/video-subtitle-helper.log`。
 
-若电脑尚未安装 `yt-dlp` 和 FFmpeg，可以运行：
+如果只想临时手动运行，仍可双击 `start-helper.command`。要移除自动启动和 Native Messaging 注册，可双击 `uninstall-helper.command`；模型缓存和项目文件不会被删除。
+
+`install-helper.command` 会安装 `yt-dlp`、Apple MLX Whisper 和拼音校正依赖。首次高准确率转写还会从 Hugging Face 下载约 3 GB 的完整 `large-v3` 模型，之后使用本机缓存。仅使用临时手动模式时，才需要另外运行 `setup-accurate.command` 在项目内建立环境。
+
+电脑还需要安装 FFmpeg：
 
 ```sh
-python3 -m pip install yt-dlp
 brew install ffmpeg
 ```
 
 ## 使用
+
+### 小红书视频口播稿
+
+1. 在浏览器打开小红书视频笔记详情页，或在信息流中打开笔记弹窗。
+2. 点击右下角“提取口播稿 TXT”，选择口播语言和高准确率/较快转写。
+3. 插件自动唤醒本地助手，使用笔记链接下载音频并通过 Whisper 转写，完成后下载 TXT。
+4. 如果平台限制导致获取失败，可选择“备用：播放录制模式”，从头播放视频并录音转写。
+
+目前适配 `/explore/笔记ID`、`/discovery/item/笔记ID` 和带 `noteId` 的信息流弹窗。请保留地址中的 `xsec_token` 等参数；短链接先在浏览器打开至详情页。图文笔记、直播及画面字幕 OCR 不在本次适配范围内。插件不会自动读取浏览器登录 Cookie；需要登录或平台拦截的视频可能无法直接下载。
+
+升级至 0.8.0 后，重新运行 `install-helper.command` 更新已安装的本地助手，并在扩展管理页重新加载插件、刷新小红书页面。
+
+### 哔哩哔哩文字稿
+
+1. 打开一个标准 B 站视频页面。
+2. 点击页面右下角的“文字稿”。
+3. 点击任一字幕可跳转到对应时间；标题栏可拖动，面板右下角可调整大小。
+4. 需要时切换字幕语言、复制全文或导出 TXT。
+
+### YouTube 字幕导出
 
 1. 打开一个 YouTube 视频页面。
 2. 点击页面右下角的“导出字幕 TXT”。
@@ -39,10 +73,11 @@ brew install ffmpeg
 
 ## 隐私与权限
 
-- 只在 `youtube.com` 页面注入界面。
+- 在 YouTube、小红书网页和 B 站标准视频页注入界面。
+- B 站功能只请求 `api.bilibili.com` 的视频/字幕元数据和字幕轨道返回的 `hdslb.com` 文件。
 - 不需要登录插件账号，也不向第三方服务器上传字幕或浏览记录。
 - 本地 Whisper 只从 `huggingface.co` 下载模型文件；视频音频始终留在本机。
-- 本机助手只接受 YouTube HTTPS 视频地址，下载的临时 WAV 会在任务结束后清理。
+- 本机助手只接受 YouTube 视频与小红书笔记的 HTTPS 地址，下载的临时 WAV 会在任务结束后清理。
 - `tabCapture` 权限仅供用户主动选择的备用播放录制模式使用。
 - 不申请 `downloads` 权限；文件由页面内生成的临时 Blob 下载。
 

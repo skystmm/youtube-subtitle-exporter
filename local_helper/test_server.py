@@ -10,6 +10,7 @@ from local_helper.server import (
     correct_unambiguous_chinese_phrases,
     validate_job_options,
     validate_youtube_url,
+    validate_video_url,
 )
 
 
@@ -33,6 +34,29 @@ class ValidateYouTubeUrlTests(unittest.TestCase):
             validate_youtube_url("https://www.youtube.com/watch?list=playlist")
         with self.assertRaises(ValueError):
             validate_youtube_url("http://www.youtube.com/watch?v=abc")
+
+
+class ValidateVideoUrlTests(unittest.TestCase):
+    def test_accepts_xiaohongshu_note_and_preserves_signature(self):
+        for path in ("explore", "discovery/item"):
+            url = f"https://www.xiaohongshu.com/{path}/67abc123?xsec_token=signed"
+            self.assertEqual(validate_video_url(url), url)
+
+    def test_rejects_unsafe_or_non_note_addresses(self):
+        for url in (
+            "http://www.xiaohongshu.com/explore/abc",
+            "https://www.xiaohongshu.com.evil.com/explore/abc",
+            "https://www.xiaohongshu.com/",
+            "https://www.xiaohongshu.com/user/profile/abc",
+            "https://user:password@www.xiaohongshu.com/explore/abc",
+            "https://www.xiaohongshu.com:43127/explore/abc",
+        ):
+            with self.subTest(url=url), self.assertRaises(ValueError):
+                validate_video_url(url)
+
+    def test_still_accepts_youtube(self):
+        url = "https://www.youtube.com/watch?v=KjxK61mBK54"
+        self.assertEqual(validate_video_url(url), url)
 
 
 class AccurateTranscriptionTests(unittest.TestCase):

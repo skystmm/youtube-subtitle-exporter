@@ -142,7 +142,7 @@ async function helperFetch(path, options = {}) {
     return await fetch(`${HELPER_URL}${path}`, options);
   } catch (error) {
     if (error?.name === "AbortError") throw error;
-    throw new Error("本地助手未启动，请双击扩展目录中的 start-helper.command");
+    throw new Error("本地助手未响应，请重新运行 install-helper.command，或查看本地助手日志");
   }
 }
 

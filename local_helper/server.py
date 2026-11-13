@@ -47,6 +47,21 @@ def validate_job_options(mode: str, language: str, title: str) -> tuple[str, str
     return mode, language, normalized_title
 
 
+def validate_video_url(value: str) -> str:
+    parsed = urlparse(value)
+    if parsed.username or parsed.password or parsed.port not in (None, 443):
+        raise ValueError("视频地址不允许包含凭据或自定义端口")
+    if parsed.hostname in YOUTUBE_HOSTS:
+        return validate_youtube_url(value)
+    if (
+        parsed.scheme == "https"
+        and parsed.hostname == "www.xiaohongshu.com"
+        and re.fullmatch(r"/(?:explore|discovery/item)/[a-zA-Z0-9]+/?", parsed.path)
+    ):
+        return value
+    raise ValueError("只支持 HTTPS YouTube 视频或小红书笔记详情地址")
+
+
 def build_initial_prompt(title: str, description: str) -> str:
     normalized_title = " ".join(str(title).split())
     normalized_description = " ".join(str(description).split())
@@ -176,7 +191,7 @@ class JobManager:
         language: str = "auto",
         title: str = "",
     ) -> Job:
-        url = validate_youtube_url(url)
+        url = validate_video_url(url)
         mode, language, title = validate_job_options(mode, language, title)
         job_id = uuid.uuid4().hex
         directory = Path(tempfile.mkdtemp(prefix="ytse-"))
@@ -286,6 +301,8 @@ class JobManager:
         except Exception as error:  # noqa: BLE001 - surfaced to local UI
             job.status = "error"
             job.error = str(error)
+            if urlparse(job.url).hostname == "www.xiaohongshu.com":
+                job.error = "小红书音频获取或转写失败，可尝试播放录制模式。" + job.error
 
     def _transcribe(self, job: Job) -> None:
         executable = find_mlx_whisper()

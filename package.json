@@ -1,10 +1,10 @@
 {
   "name": "youtube-subtitle-exporter",
-  "version": "0.6.1",
+  "version": "0.8.0",
   "private": true,
   "scripts": {
     "build": "node build.mjs",
-    "test": "node --test && python3 -m unittest local_helper.test_server && npm run build"
+    "test": "node --test && python3 -m unittest discover -s local_helper -p 'test_*.py' && npm run build"
   },
   "dependencies": {
     "@huggingface/transformers": "^4.3.0",

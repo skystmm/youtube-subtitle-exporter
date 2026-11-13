@@ -1,15 +1,17 @@
 {
   "manifest_version": 3,
-  "name": "YouTube 字幕导出器",
-  "version": "0.6.1",
-  "description": "导出 YouTube 字幕，或下载音频并使用本地 Whisper large-v3 转为 TXT。",
+  "name": "视频字幕文字稿",
+  "version": "0.8.0",
+  "description": "导出 YouTube、哔哩哔哩字幕，并通过本地 Whisper 提取小红书视频口播稿。",
   "minimum_chrome_version": "116",
-  "permissions": ["offscreen", "tabCapture"],
+  "permissions": ["offscreen", "tabCapture", "nativeMessaging"],
   "host_permissions": [
     "https://huggingface.co/*",
     "https://*.huggingface.co/*",
     "https://*.hf.co/*",
     "https://*.xethub.hf.co/*",
+    "https://api.bilibili.com/*",
+    "https://*.hdslb.com/*",
     "http://127.0.0.1:43127/*"
   ],
   "background": {
@@ -30,7 +32,19 @@
     },
     {
       "matches": ["https://www.youtube.com/*"],
-      "js": ["transcript.js", "content.js"],
+      "js": ["video-site.js", "transcript.js", "content.js"],
+      "css": ["content.css"],
+      "run_at": "document_start"
+    },
+    {
+      "matches": ["https://www.bilibili.com/video/*"],
+      "js": ["bilibili-transcript.js", "bilibili-content.js"],
+      "css": ["bilibili-content.css"],
+      "run_at": "document_start"
+    },
+    {
+      "matches": ["https://www.xiaohongshu.com/*"],
+      "js": ["video-site.js", "transcript.js", "content.js"],
       "css": ["content.css"],
       "run_at": "document_start"
     }
